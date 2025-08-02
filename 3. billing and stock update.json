@@ -1,0 +1,499 @@
+{
+  "name": "3. billing and stock update",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "\n// Step 1: Flatten input data from all items\nconst inputData = items.map(item => item.json);\n\n// Step 2: Extract ID dynamically (from first object that has 'id')\nconst dynamicId = inputData.find(obj => obj.hasOwnProperty('id'))?.id || null;\n\n// Step 3: Filter entries with price (medicines or alternatives)\nconst billingItems = inputData.filter(obj => obj.hasOwnProperty('price_per_unit'));\n\n// Step 4: Initialize total\nlet totalBill = 0;\n\n// Step 5: Build medicines list with subtotal per item\nconst medicines = billingItems.map(item => {\n  const name = item.medicine_name || item.alternative_name || 'Unknown';\n  const price = parseFloat(item.price_per_unit);\n  const quantity = parseInt(item.required, 10) || 0;\n  const subtotal = price * quantity;\n  totalBill += subtotal;\n\n  return {\n    id: dynamicId,\n    name,\n    quantity,\n    price_per_unit: price,\n    subtotal,\n    store: {\n      name: item.store_name || 'Unknown',\n      location: item.location || 'Unknown',\n      contact: item.contact || 'N/A'\n    }\n  };\n});\n\n// Step 6: Return single output object\nreturn [\n  {\n    json: {\n      id: dynamicId,\n      medicines,\n      totalBill\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        224
+      ],
+      "id": "c5ffa5d7-865b-4a07-8b1a-e69af580f73e",
+      "name": "billing"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{$json[\"query\"]}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        3616,
+        224
+      ],
+      "id": "2a224ecd-90b3-4a32-a707-c1ce07f2a3a8",
+      "name": "saving billing details",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const id = $json.id;\nconst medicines = $json.medicines;\n\nconst results = medicines.map(med => {\n  return {\n    json: {\n      query: `\n        INSERT INTO billing_summary (\n          id,\n          medicine_name,\n          quantity,\n          price_per_unit,\n          subtotal,\n          store_name,\n          store_location,\n          store_contact\n        ) VALUES (\n          ${med.id},\n          '${med.name}',\n          ${med.quantity},\n          ${med.price_per_unit},\n          ${med.subtotal},\n          '${med.store.name}',\n          '${med.store.location}',\n          '${med.store.contact}'\n        );\n      `\n    }\n  };\n});\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        224
+      ],
+      "id": "977ac7ba-9a05-416f-99ea-afbb8827921c",
+      "name": "query builder"
+    },
+    {
+      "parameters": {
+        "jsCode": "const itemsList = items;\n\nlet tableRows = itemsList.map(item => {\n  const d = item.json;\n  return `\n    <tr>\n      <td>${d.medicine_name}</td>\n      <td>${d.quantity}</td>\n      <td>${d.price_per_unit}</td>\n      <td>${d.subtotal}</td>\n      <td>${d.store_name}</td>\n      <td>${d.store_location}</td>\n      <td>${d.store_contact}</td>\n    </tr>\n  `;\n}).join('');\n\nconst approveUrl = 'https://yourdomain.com/webhook/approve';  // Replace with your actual Webhook URL\nconst rejectUrl = 'https://yourdomain.com/webhook/reject';    // Replace with your actual Webhook URL\n\nconst htmlBody = `\n  <p>Dear Doctor,</p>\n  <p>Please review the following prescription billing details:</p>\n  <table border=\"1\" cellpadding=\"8\" cellspacing=\"0\" style=\"border-collapse: collapse;\">\n    <thead>\n      <tr>\n        <th>Medicine Name</th>\n        <th>Quantity</th>\n        <th>Price/Unit</th>\n        <th>Subtotal</th>\n        <th>Store</th>\n        <th>Location</th>\n        <th>Contact</th>\n      </tr>\n    </thead>\n    <tbody>\n      ${tableRows}\n    </tbody>\n  </table>\n  <p>\n  <a href=\"http://localhost:5678/webhook-test/74e2138c-7bf3-439f-816e-fbe5634045d7?action=approve\"\n     style=\"background-color:green;color:white;padding:10px 15px;text-decoration:none;margin-right:10px;\">\n     Approve\n  </a>\n\n  <a href=\"http://localhost:5678/webhook-test/74e2138c-7bf3-439f-816e-fbe5634045d7?action=reject\"\n     style=\"background-color:red;color:white;padding:10px 15px;text-decoration:none;\">\n     Reject\n  </a>\n</p>\n\n  <p>Thank you,<br/>Team HealthCare</p>\n`;\n\nreturn [\n  {\n    json: {\n      subject: \"Prescription Billing Approval Request\",\n      htmlBody\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        224
+      ],
+      "id": "5dc6ca73-578a-4826-a9bd-70687b46e620",
+      "name": "email builder1"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "bandekarjatin02@gmail.com",
+        "subject": "={{$json[\"subject\"]}}",
+        "message": "={{$json[\"htmlBody\"]}}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        4432,
+        224
+      ],
+      "id": "9cd8bc95-f285-4988-9139-ee003f2d1701",
+      "name": "Send message and wait for response1",
+      "webhookId": "434445ca-97b4-4bf8-9326-a7487d8c00e0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9HQ6AYngH67kggO8",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM visited_patients\nORDER BY id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        3808,
+        224
+      ],
+      "id": "e0d5f775-39da-4da5-af99-25d19bb03e7d",
+      "name": "fetch patient id1",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from billing_summary\nwhere id={{ $json.id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        4016,
+        224
+      ],
+      "id": "bb1b2ca0-9205-4ce0-94ee-ddd40471697c",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"message\": \"Approval status received\",\n  \"approved\": {{$json[\"data\"][\"approved\"]}}\n}\n",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4640,
+        224
+      ],
+      "id": "2045f081-1b99-4e3f-bc91-94e57bf4eeb2",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM visited_patients\nORDER BY id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        3728,
+        544
+      ],
+      "id": "4cae133b-b89e-4a29-b78f-53b0782121c6",
+      "name": "fetch patient id2",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE medicine_store\nSET stock_available = GREATEST(stock_available - 1, 0)\nWHERE TRIM(LOWER(medicine_name)) = TRIM(LOWER('{{ $json.medicine_name }}'))\n  AND TRIM(LOWER(store_name)) = TRIM(LOWER('{{ $json.store_name }}'));\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        4192,
+        544
+      ],
+      "id": "0a8349b8-168e-4f37-9475-97b17e30403f",
+      "name": "Stock update for prescription",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4384,
+        544
+      ],
+      "id": "4f36e8f1-0311-4ef9-9a21-a4f356ea60e0",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE medicine_alternatives\nSET stock_available = GREATEST(stock_available -1 , 0)\nWHERE TRIM(LOWER(alternative_name)) = TRIM(LOWER('{{ $json.medicine_name }}'))\n  AND TRIM(LOWER(store_name)) = TRIM(LOWER('{{ $json.store_name }}'));\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        4544,
+        544
+      ],
+      "id": "2a813a3c-4e22-43ca-b163-bf7252589786",
+      "name": "update alternative meds stock",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3984,
+        544
+      ],
+      "id": "6e4f80b1-95a4-4321-852c-6281f0aaa8cc",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5098b336-9e84-4d84-9363-b9c6bd6563cf",
+              "leftValue": "={{ $json[\"data\"][\"approved\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4880,
+        224
+      ],
+      "id": "e7749561-8544-4181-b53b-35c1488a4700",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "7ddda264-0b6f-4e18-bf8b-6d7ebacc0d09",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        2816,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from billing_summary\nwhere id={{ $json.id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        4112,
+        736
+      ],
+      "id": "8400859f-bf72-430d-a6d9-7ce33661a2e9",
+      "name": "fetch billing data",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "billing": {
+      "main": [
+        [
+          {
+            "node": "query builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "saving billing details": {
+      "main": [
+        [
+          {
+            "node": "fetch patient id1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query builder": {
+      "main": [
+        [
+          {
+            "node": "saving billing details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "email builder1": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch patient id1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "email builder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch patient id2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stock update for prescription": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "update alternative meds stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Stock update for prescription",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "fetch billing data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "fetch patient id2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "billing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch billing data": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0ab738c6-4b91-4a36-bcd5-48e00023f422",
+  "meta": {
+    "instanceId": "6a02a34c7ae6555bc4ba05069ba44e9513d44fe9f5734b311fd2af3d28d39ec7"
+  },
+  "id": "7Fa8oQgEDnObLjCg",
+  "tags": []
+}

@@ -1,0 +1,378 @@
+{
+  "name": "2.stock check and alternative availability",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  mta.original_medicine_name,\n  ma.alternative_name,\n  ma.price_per_unit,\n  {{ $json[\"required\"] }} AS required\nFROM medicine_to_alternatives mta\nJOIN medicine_alternatives ma ON mta.alternative_id = ma.id\nWHERE TRIM(LOWER(mta.original_medicine_name)) = TRIM(LOWER('{{ $json[\"medicine\"] }}'))\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        1728,
+        800
+      ],
+      "id": "54f9d36d-534a-4353-98fc-4734ab748fd9",
+      "name": "Get Alternatives",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2a57952c-a20d-484a-af6b-d6e7d1a6ed09",
+              "leftValue": "={{$json[\"isAvailable\"]}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        624
+      ],
+      "id": "a15d7d05-b198-4855-ace2-d618e88223b2",
+      "name": "available stock>=required quantity"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM visited_patients\nORDER BY id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        2848,
+        624
+      ],
+      "id": "9dcd0150-d1f3-47e8-8318-22c7e312d013",
+      "name": "fetching patient id",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2032,
+        800
+      ],
+      "id": "b71376eb-f055-4936-b43a-8f69b534b30c",
+      "name": "Loop Over Items",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  alternative_name,\n  price_per_unit,\n  stock_available,\n  store_name,\n  location,\n  contact,\n  {{ $json[\"required\"] }} AS required,\n  price_per_unit from medicine_alternatives\nWHERE \n  LOWER(TRIM(alternative_name)) = LOWER(TRIM('{{$json[\"alternative_name\"]}}'))\n  AND availability = 'Yes'\n  AND stock_available >= {{$json[\"required\"]}};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        2144,
+        928
+      ],
+      "id": "3c1e99cf-fdaf-4262-8d39-e50f2c015971",
+      "name": "Check Alternative Availability1",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  medicine_name,\n  price_per_unit,\n  stock_available,\n  store_name,\n  location,\n  contact,\n  {{ $json[\"required\"] }} AS required  \nFROM \n  medicine_store\nWHERE \n  medicine_name = '{{ $json.medicine }}'\nORDER BY \n  stock_available DESC\nLIMIT 1;\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        2048,
+        512
+      ],
+      "id": "db66f45e-e04c-4947-bcff-b42a275e38f9",
+      "name": "fetching store details",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3040,
+        624
+      ],
+      "id": "33b01a0c-0591-4277-9200-8d6a2efe15af",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2672,
+        624
+      ],
+      "id": "1a905213-66ee-4e8a-a57c-1bfbf6cfbf8a",
+      "name": "Merge",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items (JSON objects)\nconst inputItems = $input.all();\n\n// Initialize with the first item as cheapest\nlet cheapest = inputItems[0].json;\n\n// Loop to find the item with the lowest price_per_unit\nfor (let i = 1; i < inputItems.length; i++) {\n  const current = inputItems[i].json;\n  if (parseFloat(current.price_per_unit) < parseFloat(cheapest.price_per_unit)) {\n    cheapest = current;\n  }\n}\n\n// Return only the cheapest item\nreturn [{ json: cheapest }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        784
+      ],
+      "id": "79725e55-44e8-45e4-b0cc-6af456961506",
+      "name": "best alternative"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prescribed = [\n  { name: 'Paracetamol', quantity: 4 },\n  { name: 'Cough Syrup', quantity: 16 }\n];\n\n// Aggregate available stock from all rows\nconst stockMap = {};\n\nfor (const item of items) {\n  const name = item.json.medicine_name;\n  const stock = item.json.stock_available;\n\n  if (!stockMap[name]) {\n    stockMap[name] = 0;\n  }\n  stockMap[name] += stock;\n}\n\n// Compare with prescribed quantity\nconst result = prescribed.map(pres => {\n  const available = stockMap[pres.name] || 0;\n  return {\n    medicine: pres.name,\n    required: pres.quantity,\n    available: available,\n    isAvailable: available >= pres.quantity\n  };\n});\n\nreturn result.map(r => ({ json: r }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        624
+      ],
+      "id": "7c3a97d5-2c0e-4f35-a02d-523331d36c99",
+      "name": "Aggregate Stock and Compare"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  medicine_name,\n  stock_available,\n  store_name\nFROM medicine_store\nWHERE medicine_name IN ('Paracetamol', 'Cough Syrup')\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        1040,
+        624
+      ],
+      "id": "56fe0f06-9c42-40b0-ad1a-ca6f3a87f5ec",
+      "name": "Check Stock1",
+      "credentials": {
+        "mySql": {
+          "id": "WcreOw9pwD44CBGi",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "45764fbb-27d7-47db-b496-20e00fa1334e",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        832,
+        624
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Alternatives": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "available stock>=required quantity": {
+      "main": [
+        [
+          {
+            "node": "fetching store details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetching patient id": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "best alternative",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Alternative Availability1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Alternative Availability1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "best alternative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetching store details": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "fetching patient id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "best alternative": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Aggregate Stock and Compare": {
+      "main": [
+        [
+          {
+            "node": "available stock>=required quantity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Stock1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Stock and Compare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Check Stock1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fabda78f-5ccb-491b-adae-9ecdbad15607",
+  "meta": {
+    "instanceId": "6a02a34c7ae6555bc4ba05069ba44e9513d44fe9f5734b311fd2af3d28d39ec7"
+  },
+  "id": "THUPmSCTdleIvopR",
+  "tags": []
+}
