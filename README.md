@@ -16,12 +16,12 @@ An automated workflow system built using [n8n](https://n8n.io/) and MySQL to man
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/n8n_smart_pharmacy.git
+   git clone https://github.com/JatinBandekar/n8n_smart_pharmacy.git
    cd n8n_smart_pharmacy
    ```
 
 2. **Set up the database**
-   - Import `schema/database_schema.sql` into your MySQL instance.
+   - Import `schema/n8n_smart_pharmacy.sql` into your MySQL instance.
 
 3. **Import workflows**
    - Open [n8n](https://n8n.io/) → Settings → Import workflows from the `workflows/` folder.
