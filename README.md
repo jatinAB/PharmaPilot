@@ -1,47 +1,31 @@
-# 💊 n8n Smart Pharmacy
+# 💊 PharmaPilot  
 
-An automated workflow system built using [n8n](https://n8n.io/) and MySQL to manage patient visits, medicine prescriptions, billing, and delivery assignment — all in a smart, efficient, and scalable way.
-
-## ⚙️ Features
-
-- 🧑‍⚕️ Patient check & registration  
-- 💊 Real-time medicine availability check  
-- 🔄 Intelligent substitution with alternative medicines  
-- 🧾 Dynamic billing & stock updates  
-- 🚚 Delivery agent assignment based on rating, pincode & load  
-- 📬 Email notifications with webhook buttons (patient & agent)
-
-
-## 🚀 Getting Started
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/JatinBandekar/n8n_smart_pharmacy.git
-   cd n8n_smart_pharmacy
-   ```
-
-2. **Set up the database**
-   - Import `schema/n8n_smart_pharmacy.sql` into your MySQL instance.
-
-3. **Import workflows**
-   - Open [n8n](https://n8n.io/) → Settings → Import workflows from the `workflows/` folder.
-
-4. **Configure environment (if needed)**
-   - Add your DB credentials, email settings, etc., in `.env`.
-
-## 🧠 Tech Stack
-
-- [n8n](https://n8n.io/) — visual automation platform
-- **MySQL** — backend database for patients, medicines, agents
-- **Webhooks & Gmail API** — for dynamic interaction & communication
-
-## 📌 Notes
-
-- The system checks medicine availability and intelligently switches to alternatives when stock is insufficient.
-- Delivery agents are auto-assigned based on rating, pincode match, and workload.
-- Stock is automatically updated after medicine assignment.
-- Webhooks in emails let patients and agents mark delivery status with a single click.
+An intelligent pharmacy automation system built using [n8n](https://n8n.io/) and **MySQL**, designed to streamline patient visits, prescriptions, billing, and delivery management.  
+PharmaPilot ensures smarter, faster, and automated healthcare workflows — all without writing a single line of code.
 
 ---
 
-🔧 Built to streamline healthcare delivery using smart, no-code automation.
+## ⚙️ Features  
+
+- 🧑‍⚕️ **Patient Management** – Simplified registration and visit tracking  
+- 💊 **Medicine Automation** – Real-time stock updates and automatic alternative substitution  
+- 🧾 **Dynamic Billing** – Auto-calculates invoices with live inventory sync  
+- 🚚 **Smart Delivery Assignment** – Assigns agents based on rating, pincode, and workload  
+- 📬 **Email Webhooks** – Sends real-time updates to patients and delivery agents via one-click status links  
+
+---
+
+## 🧠 Tech Stack  
+
+- **n8n** – Visual workflow automation  
+- **MySQL** – Backend database for patients, medicines, and agents  
+- **Gmail API & Webhooks** – For interactive communication and live tracking  
+
+---
+
+## 🚀 Getting Started  
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/JatinBandekar/PharmaPilot.git
+   cd PharmaPilot
