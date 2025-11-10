@@ -1,7 +1,7 @@
 # 💊 PharmaPilot  
 
-An intelligent pharmacy automation system built using [n8n](https://n8n.io/) and **MySQL**, designed to streamline patient visits, prescriptions, billing, and delivery management.  
-PharmaPilot ensures smarter, faster, and automated healthcare workflows — all without writing a single line of code.
+**PharmaPilot** is an intelligent **pharmacy automation system** built using [n8n](https://n8n.io/) and **MySQL**, designed to streamline patient visits, prescriptions, billing, and delivery management.  
+It ensures **smarter, faster, and automated healthcare workflows** — all without writing a single line of code.
 
 ---
 
@@ -17,58 +17,87 @@ PharmaPilot ensures smarter, faster, and automated healthcare workflows — all 
 
 ## 🧠 Tech Stack  
 
-- **n8n** – Visual workflow automation  
-- **MySQL** – Backend database for patients, medicines, and agents  
-- **Gmail API & Webhooks** – For interactive communication and live tracking  
+| Component | Description |
+|------------|-------------|
+| **n8n** | Visual workflow automation platform |
+| **MySQL** | Backend database for patients, medicines, and agents |
+| **Gmail API & Webhooks** | For interactive communication and live tracking |
+| **.env Configuration** | Stores MySQL credentials, API keys, and email settings |
 
 ---
 
 ## 🚀 Getting Started  
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/JatinBandekar/PharmaPilot.git
-   cd PharmaPilot
+### 1️⃣ Clone the Repository  
+```bash
+git clone https://github.com/JatinBandekar/PharmaPilot.git
+cd PharmaPilot
 ````
 
-2. **Set up the Database**
+### 2️⃣ Set Up the Database
 
-   * Import `schema/pharma_pilot.sql` into your MySQL instance.
+* Import the SQL schema:
 
-3. **Import Workflows**
+  ```bash
+  mysql -u your_user -p your_database < schema/pharma_pilot.sql
+  ```
 
-   * Open [n8n](https://n8n.io/) → *Settings* → *Import Workflows* from the `workflows/` folder.
+### 3️⃣ Import Workflows
 
-4. **Configure Environment**
+* Open [n8n](https://n8n.io/) → **Settings → Import Workflows**
+* Select the workflows from the `/workflows` folder in this repository.
 
-   * Add your MySQL credentials, API keys, and email settings in the `.env` file.
+### 4️⃣ Configure Environment
+
+* Create a `.env` file and add your details:
+
+  ```bash
+  MYSQL_HOST=localhost
+  MYSQL_USER=root
+  MYSQL_PASSWORD=your_password
+  MYSQL_DATABASE=pharma_pilot
+  GMAIL_API_KEY=your_gmail_api_key
+  ```
 
 ---
 
 ## 📊 Workflow Highlights
 
-* 🧾 Automated invoice generation after prescription creation
-* 🔄 Real-time inventory update upon medicine assignment
-* 🚚 Smart delivery routing based on pincode and load
-* 💌 Interactive email notifications for delivery status updates
+✅ **Automated Invoicing** – Generates bills instantly after prescription creation
+🔄 **Inventory Sync** – Updates stock in real-time when medicines are assigned
+🚚 **Smart Routing** – Assigns delivery agents by pincode and workload optimization
+💌 **Email Notifications** – Sends interactive status updates via Gmail API
 
 ---
 
 ## 🩺 Purpose
 
-PharmaPilot bridges the gap between healthcare and automation.
-It empowers pharmacies to **reduce manual work**, **prevent stock errors**, and **improve delivery efficiency** — all through a no-code, connected system.
+**PharmaPilot** bridges the gap between **healthcare and automation**.
+It empowers pharmacies to:
 
----
+* Reduce manual workload
+* Prevent stock and billing errors
+* Improve delivery efficiency
+  —all through a **no-code, connected ecosystem** powered by n8n.
+
+
 
 ## 🪪 License
 
-This project is open-source under the **MIT License**.
+This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+## 🧑‍💻 Author
+
+**Jatin Bandekar**
+📧 [bandekarjatin02@gmail.com](mailto:bandekarjatin02@gmail.com)
+🔗 [GitHub Profile](https://github.com/jatinAB)
 
 ---
 
 ## ⭐ Acknowledgment
 
-If you found **PharmaPilot** useful, consider giving it a ⭐ on GitHub —
+If you found **PharmaPilot** useful, consider giving it a ⭐ on [GitHub](https://github.com/JatinBandekar/PharmaPilot) —
 your support helps promote smarter healthcare automation 🚀
 
