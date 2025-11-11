@@ -79,19 +79,19 @@ cd PharmaPilot
 
 ### 🩺 Phase 1 & 2 – Input Handling and Patient Verification
 
-![Phase 1 & 2](phase 1& 2.png)
+![Phase 1 & 2](phase1&2.png)
 
 ---
 
 ### 💊 Phase 3 & 4 – Medicine Availability and Billing
 
-![Phase 3 & 4](phase 3&4.png)
+![Phase 3 & 4](phase3&4.png)
 
 ---
 
 ### 🚚 Phase 5 & 6 – Delivery & Inventory Update
 
-![Phase 5 & 6](phase 5&6.png)
+![Phase 5 & 6](phase5&6.png)
 
 ---
 
