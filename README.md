@@ -74,7 +74,7 @@ cd PharmaPilot
 
 ### 🩺 Phase 1 & 2 – Input Handling and Patient Verification
 
-![Phase 1 & 2](phase1&2.png)
+![Phase 1 & 2](Phase1&2.png)
 
 ---
 
