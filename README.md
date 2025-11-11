@@ -1,8 +1,3 @@
-Perfect 👍 Here’s your **updated GitHub README** for **PharmaPilot**, now including **screenshots for Phase 1–2, 3–4, and 5–6**, neatly embedded with captions and aligned to look professional on your repo page 👇
-
----
-
-````markdown
 # 💊 PharmaPilot  
 
 **PharmaPilot** is an intelligent **pharmacy automation system** built using [n8n](https://n8n.io/) and **MySQL**, designed to streamline patient visits, prescriptions, billing, and delivery management.  
@@ -127,6 +122,3 @@ This project is open-source and available under the [MIT License](LICENSE).
 If you found **PharmaPilot** useful, consider giving it a ⭐ on [GitHub](https://github.com/jatinAB/PharmaPilot) —
 your support helps promote smarter healthcare automation 🚀
 
-
-
-Would you like me to also add a **small “System Architecture Diagram”** section before the snapshots (for extra visual appeal)? It looks great for project documentation.
